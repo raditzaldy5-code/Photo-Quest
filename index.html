@@ -227,8 +227,8 @@
       }
     });
 
-  function handleUserData(googleUser) {
-     const userRef = firebase.database().ref('leaderboard/' + googleUser.uid);
+      function handleUserData(googleUser) {
+      const userRef = firebase.database().ref('leaderboard/' + googleUser.uid);
 
       // Timeout untuk jaga-jaga jika koneksi database lambat
       const dbTimeout = setTimeout(() => {
@@ -273,7 +273,7 @@
     function loadFallbackUser(googleUser) {
       let savedUser = null;
       try { savedUser = JSON.parse(localStorage.getItem('pqUserV4')); } catch(e){}
-      
+
       user = {
         id: (savedUser && savedUser.id) ? savedUser.id : Math.floor(100000 + Math.random() * 900000).toString(),
         uid: googleUser.uid,
@@ -288,16 +288,11 @@
         historyVisible: true,
         isGuest: false
       };
+
       saveUser();
       showHome();
     }
-
-      }).catch((err) => {
-        console.error("Gagal sinkron data cloud, memakai data lokal:", err);
-        showHome();
-      });
-    }
-
+      
     // Logout
     function logoutPlayer() {
       auth.signOut().then(() => {
