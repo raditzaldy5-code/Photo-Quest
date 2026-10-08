@@ -145,7 +145,10 @@
 <section id="statsPage" class="hidden"><h1>📊 STATISTIK</h1><div class="statsGrid"><div class="statCard">Total permainan<b id="stGames">0</b></div><div class="statCard">Skor terbaik<b id="stBest">0</b></div><div class="statCard">Rata-rata skor<b id="stAvg">0</b></div><div class="statCard">Soal dimainkan<b id="stQuestions">0</b></div></div><button class="btn back" onclick="goHome()">← KEMBALI</button></section>
 
 <section id="leaderboardPage" class="hidden">
-  <h1>🏆 LEADERBOARD</h1>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+    <h1 style="margin: 0;">🏆 LEADERBOARD</h1>
+    <button class="btn dark" onclick="showHome()" style="width: auto; padding: 8px 16px;">⬅️ Kembali</button>
+  </div>
   <p id="lbStatus" class="muted">Peringkat Pemain Photo Quest</p>
   <div id="leaderboardList"></div>
 </section>
