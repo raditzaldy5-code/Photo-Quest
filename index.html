@@ -176,22 +176,28 @@
         });
     }
     // Fungsi Login Guest
-    function loginAsGuest() {
-      const guestNum = Math.floor(100000 + Math.random() * 900000).toString();
+        function loginAsGuest() {
+      // Cek apakah sudah pernah buat akun Guest sebelumnya agar ID tidak berubah
+      let savedUser = null;
+      try { savedUser = JSON.parse(localStorage.getItem('pqUserV4')); } catch(e){}
+
+      let guestNum = (savedUser && savedUser.isGuest && savedUser.id) ? savedUser.id : Math.floor(100000 + Math.random() * 900000).toString();
+
       user = {
         id: guestNum,
         uid: 'guest_' + guestNum,
-        name: 'Guest_' + guestNum.substring(0, 4),
+        name: (savedUser && savedUser.isGuest) ? savedUser.name : ('Guest_' + guestNum.substring(0, 4)),
         avatar: avatarData('Guest'),
         banner: '',
-        games: 0,
-        best: 0,
-        totalScore: 0,
-        totalQuestions: 0,
-        history: [],
+        games: (savedUser && savedUser.games) ? savedUser.games : 0,
+        best: (savedUser && savedUser.best) ? savedUser.best : 0,
+        totalScore: (savedUser && savedUser.totalScore) ? savedUser.totalScore : 0,
+        totalQuestions: (savedUser && savedUser.totalQuestions) ? savedUser.totalQuestions : 0,
+        history: (savedUser && savedUser.history) ? savedUser.history : [],
         historyVisible: true,
         isGuest: true
       };
+
       saveUser();
       showHome();
     }
@@ -207,9 +213,16 @@
     });
 
     // Sesi login persisten
-    auth.onAuthStateChanged((googleUser) => {
+        auth.onAuthStateChanged((googleUser) => {
       if (googleUser) {
         handleUserData(googleUser);
+      } else {
+        // Jika bukan login Google, cek apakah user login sebagai Guest
+        let savedUser = readUser();
+        if (savedUser && savedUser.isGuest) {
+          user = savedUser;
+          showHome();
+        }
       }
     });
 
