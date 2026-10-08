@@ -144,8 +144,11 @@
 
 <section id="statsPage" class="hidden"><h1>📊 STATISTIK</h1><div class="statsGrid"><div class="statCard">Total permainan<b id="stGames">0</b></div><div class="statCard">Skor terbaik<b id="stBest">0</b></div><div class="statCard">Rata-rata skor<b id="stAvg">0</b></div><div class="statCard">Soal dimainkan<b id="stQuestions">0</b></div></div><button class="btn back" onclick="goHome()">← KEMBALI</button></section>
 
-<section id="leaderboardPage" class="hidden"><h1>🏆 LEADERBOARD</h1><p id="lbStatus" class="muted">Mode lokal sementara • Firebase belum dikonfigurasi</p><div id="leaderboardList"></div><button class="btn back" onclick="goHome()">← KEMBALI</button></section>
-</div></div>
+<section id="leaderboardPage" class="hidden">
+  <h1>🏆 LEADERBOARD</h1>
+  <p id="lbStatus" class="muted">Peringkat Pemain Photo Quest</p>
+  <div id="leaderboardList"></div>
+</section>
 
 <div id="menuDrawer" class="menuDrawer hidden" onclick="if(event.target===this)closeMenu()">
   <div class="drawerPanel">
@@ -423,13 +426,13 @@ function showStats(){$('stGames').textContent=user.games||0;$('stBest').textCont
 function localLeaderboard(){let all=[];try{all=JSON.parse(localStorage.getItem('pqLeaderboardV4')||'[]')}catch(e){}const idx=all.findIndex(x=>x.id===user.id);const entry={id:user.id,name:user.name,avatar:user.avatar,score:user.best||0};if(idx>=0)all[idx]=entry;else all.push(entry);all.sort((a,b)=>b.score-a.score);localStorage.setItem('pqLeaderboardV4',JSON.stringify(all));return all}
 function showLeaderboard() {
   showOnly('leaderboardPage');
-  const container = document.getElementById('leaderboardList') || document.querySelector('#leaderboardPage .list');
+  const container = document.getElementById('leaderboardList') || document.getElementById('leaderboardPage');
   if(!container) return;
 
   container.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Memuat leaderboard online...</div>';
 
   firebase.database().ref('leaderboard')
-    .orderByChild('score')
+    .orderByChild('best')
     .limitToLast(20)
     .once('value')
     .then((snapshot) => {
@@ -438,7 +441,7 @@ function showLeaderboard() {
         players.push(child.val());
       });
 
-      players.sort((a, b) => b.score - a.score);
+      players.sort((a, b) => (b.best || 0) - (a.best || 0));
 
       if (players.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Belum ada data pemain Google.</div>';
@@ -457,8 +460,8 @@ function showLeaderboard() {
                 <div style="font-size:12px; opacity:0.7;">ID: ${p.id}</div>
               </div>
             </div>
-            <div style="font-weight:bold; font-size:16px;">${p.score} pts</div>
-          </div>
+            <div style="font-weight:bold; font-size:16px;">${p.best || 0} pts</div>
+             </div>
         `;
       });
 
