@@ -174,7 +174,7 @@
   </div>
 </div>
 
-<!-- Modal Profil (Baris 177) -->
+<!-- Modal Profil -->
 <div id="profileModal" class="modal hidden">
   <div class="card modalCard">
     <div class="top">
@@ -612,7 +612,7 @@ function selectAccount(id){
     showHome();
   }
 }
-  // --- BUKA & TUTUP MODAL PROFIL ---
+// --- BUKA & TUTUP MODAL PROFIL ---
 function showProfile() {
   if (!user) return;
   const profileAvatarImg = document.getElementById('profileAvatar');
@@ -646,6 +646,75 @@ document.getElementById('inputBanner').addEventListener('change', function(e) {
   this.value = '';
 });
 
+function openCropModal(file, type) {
+  currentCropType = type;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const cropImg = document.getElementById('cropImage');
+    cropImg.src = evt.target.result;
+    document.getElementById('cropTitle').innerText = (type === 'avatar') ? 'Potong Foto Profil' : 'Potong Banner';
+    document.getElementById('cropModal').classList.remove('hidden');
+
+    if (cropper) cropper.destroy();
+
+    cropper = new Cropper(cropImg, {
+      aspectRatio: (type === 'avatar') ? 1 : 3 / 1,
+      viewMode: 1,
+      autoCropArea: 1
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function closeCropModal() {
+  document.getElementById('cropModal').classList.add('hidden');
+  if (cropper) {
+    cropper.destroy();
+    cropper = null;
+  }
+}
+
+document.getElementById('btnApplyCrop').addEventListener('click', function() {
+  if (!cropper) return;
+  const canvas = cropper.getCroppedCanvas({
+    width: currentCropType === 'avatar' ? 300 : 800,
+    height: currentCropType === 'avatar' ? 300 : 266
+  });
+  const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+
+  if (currentCropType === 'avatar') {
+    croppedAvatarBase64 = base64Image;
+    const profileAvatarImg = document.getElementById('profileAvatar');
+    if (profileAvatarImg) profileAvatarImg.src = base64Image;
+  } else if (currentCropType === 'banner') {
+    croppedBannerBase64 = base64Image;
+  }
+  closeCropModal();
+});
+
+// --- SIMPAN PERUBAHAN PROFIL ---
+function saveProfile() {
+  if (!user) return;
+
+  const inputName = document.getElementById('editNameInput');
+  if (inputName && inputName.value.trim() !== '') {
+    user.name = inputName.value.trim();
+  }
+
+  if (croppedAvatarBase64) {
+    user.avatar = croppedAvatarBase64;
+  }
+  if (croppedBannerBase64) {
+    user.banner = croppedBannerBase64;
+  }
+
+  saveUser();
+  renderHome();
+  closeProfile();
+
+  croppedAvatarBase64 = null;
+  croppedBannerBase64 = null;
+}
 function openCropModal(file, type) {
   currentCropType = type;
   const reader = new FileReader();
