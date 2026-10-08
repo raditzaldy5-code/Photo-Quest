@@ -90,71 +90,72 @@
 
 <div id="cropModal" class="modal hidden"><div class="card modalCard"><div class="top"><h2 id="cropTitle">Atur Foto</h2><button class="btn dark" style="width:auto;margin:0" onclick="cancelCrop()">✕</button></div><div class="cropBox"><div id="cropViewport" class="cropViewport"><img id="cropImg" class="cropImg" alt="crop preview"><div id="cropMask" class="cropMask"></div></div><div class="cropHint">Geser foto untuk mengatur posisi • Zoom untuk memperbesar/memperkecil</div><div class="cropControls"><span>−</span><input id="cropZoom" type="range" min="1" max="3" step="0.01" value="1"><span>+</span></div></div><div class="cropActions"><button class="btn dark" onclick="cancelCrop()">BATAL</button><button class="btn" onclick="applyCrop()">GUNAKAN FOTO</button></div></div></div>
 
-<script>
-  // Konfigurasi Firebase Photo Quest
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyBaNZztZI81aFWcI3ysLLIgq5zDhGWGlzI",
-  authDomain: "photo-quest-3c2fd.firebaseapp.com",
-  projectId: "photo-quest-3c2fd",
-  storageBucket: "photo-quest-3c2fd.firebasestorage.app",
-  messagingSenderId: "754999319152",
-  appId: "1:754999319152:web:c557ba9cdc77b3a878f2b5",
-  measurementId: "G-TYQ492ZERP"
-};
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
-// Inisialisasi
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const googleProvider = new firebase.auth.GoogleAuthProvider();
-
-// Fungsi Login Google
-function loginWithGoogle() {
-  auth.signInWithPopup(googleProvider).then((result) => {
-    const googleUser = result.user;
-    user = {
-      id: googleUser.uid,
-      name: googleUser.displayName || 'Player',
-      avatar: googleUser.photoURL || avatarData('Player'),
-      banner: '',
-      games: 0,
-      best: 0,
-      totalScore: 0,
-      totalQuestions: 0,
-      history: [],
-      historyVisible: true
+  <script>
+    // Konfigurasi Firebase Photo Quest
+    const firebaseConfig = {
+      apiKey: "AIzaSyBdMZZtzI81aFKCI3ysL1gp52DRW0Glzl*", // Pastikan API Key ini sesuai dari Firebase Console kamu
+      authDomain: "photo-quest-3c2fd.firebaseapp.com",
+      projectId: "photo-quest-3c2fd",
+      storageBucket: "photo-quest-3c2fd.firebasestorage.app",
+      messagingSenderId: "754999319152",
+      appId: "1:754999319152:web:c557ba9cdc778ae7872b57",
+      measurementId: "G-TYQ49ZERP"
     };
-    saveUser();
-    showHome();
-  }).catch((error) => {
-    alert("Gagal login: " + error.message);
-  });
-}
 
-// Fungsi Logout
-function logoutPlayer() {
-  auth.signOut().then(() => {
-    localStorage.removeItem('pqUserV4');
-    user = null;
-    closeMenu();
-    showOnly('login');
-  });
-}
+    // Inisialisasi Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+    // Fungsi Login Google (Pakai Redirect agar lancar di HP)
+    function loginWithGoogle() {
+      auth.signInWithRedirect(googleProvider);
+    }
+
+    // Tangkap hasil setelah login dari Google
+    auth.getRedirectResult().then((result) => {
+      if (result && result.user) {
+        handleUserData(result.user);
+      }
+    }).catch((error) => {
+      alert("Gagal login: " + error.message);
+    });
+
+    // Cek status login saat halaman dibuka
+    auth.onAuthStateChanged((googleUser) => {
+      if (googleUser) {
+        handleUserData(googleUser);
+      }
+    });
+
+    function handleUserData(googleUser) {
+      user = {
+        id: googleUser.uid,
+        name: googleUser.displayName || 'Player',
+        avatar: googleUser.photoURL || avatarData(googleUser.displayName || 'Player'),
+        banner: '',
+        games: 0,
+        best: 0,
+        totalScore: 0,
+        totalQuestions: 0,
+        history: [],
+        historyVisible: true
+      };
+      saveUser();
+      showHome();
+    }
+
+    // Fungsi Logout
+    function logoutPlayer() {
+      auth.signOut().then(() => {
+        localStorage.removeItem('pqUserV4');
+        user = null;
+        closeMenu();
+        showOnly('login');
+      });
+    }
 const QUESTIONS=[
 {d:'Easy',t:'Indoor Redup',s:'Ruangan agak redup. Orang duduk diam. Kamu ingin background blur dan foto tidak goyang.',g:'Terang + bokeh + aman dari goyangan.',iso:[800,1600],ap:['f/1.8','f/2.8'],ss:[60,125],why:'ISO 800–1600, f/1.8–2.8, dan 1/60–1/125 cocok untuk ruangan redup dengan subjek diam.'},
 {d:'Easy',t:'Portrait Siang',s:'Outdoor siang hari. Matahari cukup terang. Subjek berdiri diam dan background ingin blur.',g:'Tidak overexposure + background blur.',iso:[100],ap:['f/1.8','f/2.8','f/4'],ss:[500,1000],why:'ISO 100 menjaga exposure; aperture lebar memberi bokeh; shutter cepat membantu menahan cahaya siang.'},
