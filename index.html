@@ -90,8 +90,8 @@
 
 <div id="cropModal" class="modal hidden"><div class="card modalCard"><div class="top"><h2 id="cropTitle">Atur Foto</h2><button class="btn dark" style="width:auto;margin:0" onclick="cancelCrop()">✕</button></div><div class="cropBox"><div id="cropViewport" class="cropViewport"><img id="cropImg" class="cropImg" alt="crop preview"><div id="cropMask" class="cropMask"></div></div><div class="cropHint">Geser foto untuk mengatur posisi • Zoom untuk memperbesar/memperkecil</div><div class="cropControls"><span>−</span><input id="cropZoom" type="range" min="1" max="3" step="0.01" value="1"><span>+</span></div></div><div class="cropActions"><button class="btn dark" onclick="cancelCrop()">BATAL</button><button class="btn" onclick="applyCrop()">GUNAKAN FOTO</button></div></div></div>
 
-  <script>
-    // Konfigurasi Firebase
+    <script>
+    // Konfigurasi Firebase Photo Quest
     const firebaseConfig = {
       apiKey: "AIzaSyBdMZZtzI81aFKCI3ysL1gp52DRW0Glzl",
       authDomain: "photo-quest-3c2fd.firebaseapp.com",
@@ -102,28 +102,44 @@
       measurementId: "G-TYQ49ZERP"
     };
 
-    // Inisialisasi Firebase
+    // Inisialisasi
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
     const auth = firebase.auth();
-    const googleProvider = new firebase.auth.GoogleAuthProvider();
 
     // Fungsi Login Google
     function loginWithGoogle() {
-      auth.signInWithRedirect(googleProvider);
+      const provider = new firebase.auth.GoogleAuthProvider();
+      
+      auth.signInWithPopup(provider)
+        .then((result) => {
+          if (result && result.user) {
+            handleUserData(result.user);
+          }
+        })
+        .catch((error) => {
+          // Jika popup diblokir browser HP, otomatis beralih ke Redirect
+          if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+            auth.signInWithRedirect(provider);
+          } else {
+            alert("Error Login: " + error.message);
+          }
+        });
     }
 
-    // Tangkap hasil redirect setelah kembali dari Google
+    // Tangkap hasil jika beralih ke Redirect
     auth.getRedirectResult().then((result) => {
       if (result && result.user) {
         handleUserData(result.user);
       }
-    }).catch((error) => {
-      alert("Gagal login: " + error.message);
+    }).catch((err) => {
+      if (err.code && err.code !== 'auth/null-user') {
+        alert("Redirect Error: " + err.message);
+      }
     });
 
-    // Cek status sesi user
+    // Sesi login persisten
     auth.onAuthStateChanged((googleUser) => {
       if (googleUser) {
         handleUserData(googleUser);
@@ -147,7 +163,7 @@
       showHome();
     }
 
-    // Fungsi Logout
+    // Logout
     function logoutPlayer() {
       auth.signOut().then(() => {
         localStorage.removeItem('pqUserV4');
