@@ -217,13 +217,23 @@
     });
 
     // Sesi Login Persisten (Cek Sesi saat Refresh)
+        // Cek dulu apakah ada user yang tersimpan di memori lokal HP agar tidak kedip/delay
+    let savedLocalUser = readUser();
+    if (savedLocalUser) {
+      user = savedLocalUser;
+      showHome();
+    } else {
+      showOnly('login');
+    }
+
+    // Sesi Login Persisten (Cek Sesi Firebase di latar belakang)
     auth.onAuthStateChanged((googleUser) => {
       if (googleUser) {
         handleUserData(googleUser);
       } else {
-        let savedUser = readUser();
-        if (savedUser && savedUser.isGuest) {
-          user = savedUser;
+        let currentSaved = readUser();
+        if (currentSaved && currentSaved.isGuest) {
+          user = currentSaved;
           showHome();
         } else {
           showOnly('login');
