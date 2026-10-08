@@ -27,15 +27,27 @@
   .light-theme .themeSwitch::after{content:'☀️';left:26px;background:#fff;}
 
   .hidden{display:none !important;}
-    /* Aturan Lengkap Tema Terang (Light Theme) */
+      /* Aturan Lengkap Tema Terang (Light Theme) */
   body.light-theme { background: #e0e0e0 !important; color: #171717 !important; }
   body.light-theme .card { background: #ffffff !important; color: #171717 !important; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
   body.light-theme .profileBox { background: #f0f0f0 !important; color: #171717 !important; }
   body.light-theme .nameRow, body.light-theme h1, body.light-theme h2, body.light-theme .sectionTitle { color: #171717 !important; }
   body.light-theme .muted { color: #666666 !important; }
   body.light-theme .hamburgerBtn { background: #e8e8e8 !important; color: #171717 !important; border-color: #ccc !important; }
-  body.light-theme .choice, body.light-theme .choiceTwo { background: #e0e0e0 !important; color: #171717 !important; }
-  body.light-theme .choice.active, body.light-theme .choiceTwo.active { background: #171717 !important; color: #ffffff !important; }
+
+  /* Tombol Profil, Statistik, Leaderboard (Gelap) */
+  body.light-theme .grid2 .btn, body.light-theme #home .btn:not(.active) { background: #292929 !important; color: #ffffff !important; border: none !important; }
+
+  /* Menghilangkan latar belakang wadah pembungkus yang bocor */
+  body.light-theme .choice, body.light-theme .choiceTwo { background: transparent !important; border: none !important; box-shadow: none !important; }
+
+  /* Mode Tidak Dipilih (Gelap seperti Medium/Hard) */
+  body.light-theme .choice button, body.light-theme .choiceTwo button { background: #292929 !important; color: #ffffff !important; border: 2px solid transparent !important; }
+
+  /* Mode Dipilih (Putih dengan Lineart Hitam) */
+  body.light-theme .choice button.active, body.light-theme .choiceTwo button.active { background: #ffffff !important; color: #171717 !important; border: 2px solid #171717 !important; font-weight: bold; }
+
+  /* Menu Drawer & Sakelar Tema */
   body.light-theme .drawerPanel { background: #ffffff !important; color: #171717 !important; }
   body.light-theme .drawerHead h2, body.light-theme .drawerClose { color: #171717 !important; }
   body.light-theme .themeRow { background: #f0f0f0 !important; color: #171717 !important; }
