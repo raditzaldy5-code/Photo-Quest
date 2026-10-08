@@ -55,14 +55,40 @@
   body.light-theme .themeSwitch { background: #ccc !important; }
   body.light-theme .themeSwitch::after { content: '☀️'; left: 26px; background: #fff; }
 
+      /* Tampilan Fullscreen & Posisi Tengah untuk Loading */
+    #authLoading {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 60vh;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* Animasi Lingkaran Berputar */
+    .loadingSpinner {
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top: 4px solid #fff;
+      border-radius: 50%;
+      width: 45px;
+      height: 45px;
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  
 </style>
 </head>
 <body>
 <div class="wrap"><div class="card">
     <!-- Layar Loading Pembuka -->
-    <section id="authLoading" class="hidden" style="text-align: center; padding: 60px 20px;">
-      <div style="border: 4px solid #333; border-top: 4px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px auto;"></div>
-      <p style="color: #aaa; font-size: 14px;">Memeriksa akun...</p>
+    <section id="authLoading" class="hidden">
+      <div class="loadingSpinner"></div>
+      <p style="color: #aaa; font-size: 14px; margin-top: 15px;">Memeriksa akun...</p>
     </section>
 
     <!-- Layar Login -->
