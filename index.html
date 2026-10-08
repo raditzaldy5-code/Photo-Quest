@@ -75,10 +75,10 @@
   <div class="drawerPanel">
     <div class="drawerHead"><h2>MENU</h2><button class="drawerClose" onclick="closeMenu()">✕</button></div>
     <div class="themeRow">
-      <button class="btn dark" style="margin-top:14px;background:#ff4d4d;color:#fff;border:0" onclick="logoutPlayer()">🚪 LOGOUT</button>
-      <div class="themeText"><b>Mode Tampilan</b><small id="themeLabel">Cerah</small></div>
-      <button id="themeSwitch" class="themeSwitch" aria-label="Ganti tema" onclick="toggleTheme()"></button>
-    </div>
+            <div class="themeRow">
+        <div class="themeText"><b>Mode Tampilan</b><small>Gelap / Terang</small></div>
+        <button id="themeSwitch" class="themeSwitch" aria-label="Ganti Tema"></button>
+      </div>
     <button class="btn dark" style="margin-top:14px;background:#ff4d4d;color:#fff;border:0" onclick="logoutPlayer()">LOGOUT</button>
     <div class="drawerCredit">Created by R</div>
   </div>
@@ -146,9 +146,13 @@
       }
     });
 
-    function handleUserData(googleUser) {
+        function handleUserData(googleUser) {
+      // Buat ID angka 6 digit jika belum ada
+      const shortId = Math.floor(100000 + Math.random() * 900000).toString();
+
       user = {
-        id: googleUser.uid,
+        id: shortId, // <--- Sekarang ID berupa angka 6 digit (contoh: 582914)
+        uid: googleUser.uid, // Tetap simpan UID asli Firebase di latar belakang
         name: googleUser.displayName || 'Player',
         avatar: googleUser.photoURL || avatarData(googleUser.displayName || 'Player'),
         banner: '',
