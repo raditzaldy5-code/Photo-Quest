@@ -90,10 +90,10 @@
 
 <div id="cropModal" class="modal hidden"><div class="card modalCard"><div class="top"><h2 id="cropTitle">Atur Foto</h2><button class="btn dark" style="width:auto;margin:0" onclick="cancelCrop()">✕</button></div><div class="cropBox"><div id="cropViewport" class="cropViewport"><img id="cropImg" class="cropImg" alt="crop preview"><div id="cropMask" class="cropMask"></div></div><div class="cropHint">Geser foto untuk mengatur posisi • Zoom untuk memperbesar/memperkecil</div><div class="cropControls"><span>−</span><input id="cropZoom" type="range" min="1" max="3" step="0.01" value="1"><span>+</span></div></div><div class="cropActions"><button class="btn dark" onclick="cancelCrop()">BATAL</button><button class="btn" onclick="applyCrop()">GUNAKAN FOTO</button></div></div></div>
 
-  <<script>
-    // Konfigurasi Firebase Photo Quest
+  <script>
+    // Konfigurasi Firebase
     const firebaseConfig = {
-      apiKey: "AIzaSyBdMZZtzI81aFKCI3ysL1gp52DRW0Glzl*", // Pastikan API Key ini sesuai dari Firebase Console kamu
+      apiKey: "AIzaSyBdMZZtzI81aFKCI3ysL1gp52DRW0Glzl",
       authDomain: "photo-quest-3c2fd.firebaseapp.com",
       projectId: "photo-quest-3c2fd",
       storageBucket: "photo-quest-3c2fd.firebasestorage.app",
@@ -109,12 +109,12 @@
     const auth = firebase.auth();
     const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-    // Fungsi Login Google (Pakai Redirect agar lancar di HP)
+    // Fungsi Login Google
     function loginWithGoogle() {
       auth.signInWithRedirect(googleProvider);
     }
 
-    // Tangkap hasil setelah login dari Google
+    // Tangkap hasil redirect setelah kembali dari Google
     auth.getRedirectResult().then((result) => {
       if (result && result.user) {
         handleUserData(result.user);
@@ -123,7 +123,7 @@
       alert("Gagal login: " + error.message);
     });
 
-    // Cek status login saat halaman dibuka
+    // Cek status sesi user
     auth.onAuthStateChanged((googleUser) => {
       if (googleUser) {
         handleUserData(googleUser);
