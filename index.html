@@ -227,14 +227,19 @@
       }
     });
 
-                function handleUserData(googleUser) {
-      const userRef = firebase.database().ref('leaderboard/' + googleUser.uid);
+  function handleUserData(googleUser) {
+     const userRef = firebase.database().ref('leaderboard/' + googleUser.uid);
 
-      // Cek apakah data user sudah ada di Firebase
+      // Timeout untuk jaga-jaga jika koneksi database lambat
+      const dbTimeout = setTimeout(() => {
+        console.warn("Database timeout, menggunakan data lokal/default");
+        loadFallbackUser(googleUser);
+      }, 3000);
+
       userRef.once('value').then((snapshot) => {
+        clearTimeout(dbTimeout);
         const cloudData = snapshot.val();
 
-        // Ambil data lokal jika ada sebagai cadangan
         let savedUser = null;
         try { savedUser = JSON.parse(localStorage.getItem('pqUserV4')); } catch(e){}
 
@@ -258,6 +263,35 @@
 
         saveUser();
         showHome();
+      }).catch((err) => {
+        clearTimeout(dbTimeout);
+        console.error("Gagal sinkron data cloud:", err);
+        loadFallbackUser(googleUser);
+      });
+    }
+
+    function loadFallbackUser(googleUser) {
+      let savedUser = null;
+      try { savedUser = JSON.parse(localStorage.getItem('pqUserV4')); } catch(e){}
+      
+      user = {
+        id: (savedUser && savedUser.id) ? savedUser.id : Math.floor(100000 + Math.random() * 900000).toString(),
+        uid: googleUser.uid,
+        name: googleUser.displayName || 'Player',
+        avatar: googleUser.photoURL || avatarData(googleUser.displayName || 'Player'),
+        banner: (savedUser && savedUser.banner) || '',
+        games: (savedUser && savedUser.games) || 0,
+        best: (savedUser && savedUser.best) || 0,
+        totalScore: (savedUser && savedUser.totalScore) || 0,
+        totalQuestions: (savedUser && savedUser.totalQuestions) || 0,
+        history: (savedUser && savedUser.history) || [],
+        historyVisible: true,
+        isGuest: false
+      };
+      saveUser();
+      showHome();
+    }
+
       }).catch((err) => {
         console.error("Gagal sinkron data cloud, memakai data lokal:", err);
         showHome();
