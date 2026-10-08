@@ -60,6 +60,19 @@
 <body>
 <div class="wrap"><div class="card">
 <section id="login">
+      <!-- Layar Loading Pembuka -->
+    <section id="authLoading" style="text-align: center; padding: 60px 20px;">
+      <div style="border: 4px solid #333; border-top: 4px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px auto;"></div>
+      <p style="color: #aaa; font-size: 14px;">Memeriksa akun...</p>
+    </section>
+
+    <style>
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+
   <div class="loginTitle">
     <h1>📸 PHOTO QUEST</h1>
     <p class="muted">Latihan ISO • Aperture • Shutter Speed</p>
@@ -226,14 +239,17 @@
       showOnly('login');
     }
 
-    // Sesi Login Persisten (Cek Sesi Firebase di latar belakang)
+        // Tampilkan layar loading saat pertama kali dimuat/direfresh
+    showOnly('authLoading');
+
+    // Sesi Login Persisten
     auth.onAuthStateChanged((googleUser) => {
       if (googleUser) {
         handleUserData(googleUser);
       } else {
-        let currentSaved = readUser();
-        if (currentSaved && currentSaved.isGuest) {
-          user = currentSaved;
+        let savedUser = readUser();
+        if (savedUser && savedUser.isGuest) {
+          user = savedUser;
           showHome();
         } else {
           showOnly('login');
@@ -348,7 +364,12 @@ function saveHistory(){user.history=readHistory();saveUser()}
 function updateImage(img,src){if(img)img.src=src||avatarData(user?.name||'Player')}
 function createPlayer(){const n=$('loginName').value.trim();if(!n)return alert('Isi nama dulu 😭');user={id:makeId(),name:n,avatar:avatarData(n),banner:'',games:0,best:0,totalScore:0,totalQuestions:0,history:[],historyVisible:true};const f=$('loginPhoto').files[0];if(f){const r=new FileReader();r.onload=()=>{user.avatar=r.result;if(saveUser())showHome()};r.onerror=()=>alert('Foto profil gagal dibaca. Coba pilih foto lain.');r.readAsDataURL(f)}else{if(saveUser())showHome()}}
 function makeId(){return Math.random().toString(36).slice(2,8).toUpperCase()+Date.now().toString(36).slice(-4).toUpperCase()}
-function showOnly(id){['login','home','game','finish','statsPage','leaderboardPage'].forEach(x=>$(x).classList.toggle('hidden',x!==id))}
+function showOnly(id) {
+  ['authLoading', 'login', 'home', 'game', 'finish', 'statsPage', 'leaderboardPage'].forEach(x => {
+    const el = document.getElementById(x);
+    if (el) el.classList.toggle('hidden', x !== id);
+  });
+}
 function showHome(){showOnly('home');renderHome()}
 function renderHome(){if(!user.id){user.id=makeId();saveUser()}updateImage($('homeAvatar'),user.avatar);$('homeBanner').src=user.banner||'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300"><defs><linearGradient id="g" x1="0" x2="1"><stop stop-color="#3b3b3b"/><stop offset="1" stop-color="#171717"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/></svg>');$('homeName').textContent=user.name;$('homePlayerId').textContent='ID: '+user.id;setDifficulty(settings.difficulty,false);setCount(settings.count,false);renderHistory()}
 function setDifficulty(d,rerender=true){settings.difficulty=d;['easy','medium','hard'].forEach(x=>$(x).classList.remove('active'));$(d.toLowerCase()).classList.add('active');if(rerender)renderHistory()}
