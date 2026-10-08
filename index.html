@@ -75,17 +75,20 @@
 <section id="leaderboardPage" class="hidden"><h1>🏆 LEADERBOARD</h1><p id="lbStatus" class="muted">Mode lokal sementara • Firebase belum dikonfigurasi</p><div id="leaderboardList"></div><button class="btn back" onclick="goHome()">← KEMBALI</button></section>
 </div></div>
 
-    <div id="menuDrawer" class="menuDrawer hidden" onclick="if(event.target===this)closeMenu()">
-      <div class="drawerPanel">
-        <div class="drawerHead"><h2>MENU</h2><button class="drawerClose" onclick="closeMenu()">✕</button></div>
-        <div class="themeRow">
-          <div class="themeText"><b>Mode Tampilan</b><small>Gelap / Terang</small></div>
-          <button id="themeSwitch" class="themeSwitch" aria-label="Ganti Tema"></button>
-        </div>
-        <button class="btn dark" style="margin-top:20px;background:#ff4d4d;color:#fff;border:0;width:100%;" onclick="logoutPlayer()">LOGOUT</button>
-        <div class="drawerCredit">Created by R</div>
-      </div>
+<div id="menuDrawer" class="menuDrawer hidden" onclick="if(event.target===this)closeMenu()">
+  <div class="drawerPanel">
+    <div class="drawerHead">
+      <h2>MENU</h2>
+      <button class="drawerClose" onclick="closeMenu()">✕</button>
     </div>
+    <div class="themeRow">
+      <div class="themeText"><b>Mode Tampilan</b><br><small>Gelap / Terang</small></div>
+      <button id="themeSwitch" class="themeSwitch" aria-label="Ganti Tema" onclick="toggleTheme()"></button>
+    </div>
+    <button class="btn dark" style="margin-top:20px;background:#ff4d4d;color:#fff;border:0;width:100%" onclick="logoutPlayer()">Keluar / Ganti Akun</button>
+    <div class="drawerCredit">Created by 8</div>
+  </div>
+</div>
 
 <div id="profileModal" class="modal hidden"><div class="card modalCard"><div class="top"><h2>👤 PROFIL</h2><button class="btn dark" style="width:auto;margin:0" onclick="closeModal()">✕</button></div>
 <div style="margin:15px auto;max-width:440px"><label class="label">Banner / Latar Profil</label><div style="position:relative;border-radius:16px;overflow:hidden;background:#292929"><img id="profileBanner" class="profileBanner" style="aspect-ratio:3/1" alt="banner profil"><label class="btn dark" style="position:absolute;right:10px;top:10px;width:auto;margin:0;padding:9px 13px;font-size:14px;cursor:pointer">✎ GANTI BANNER<input id="profileBannerInput" class="fileInput" type="file" accept="image/*"></label></div><button class="btn dark" style="margin-top:8px" onclick="removeBanner()">HAPUS BANNER</button></div>
