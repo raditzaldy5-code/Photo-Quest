@@ -1,5 +1,8 @@
 <!doctype html>
 <html lang="id">
+  <!-- Firebase App & Auth SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -18,26 +21,15 @@
 <body>
 <div class="wrap"><div class="card">
 <section id="login">
-  <div class="loginTitle"><h1>📸 PHOTO QUEST</h1><p class="muted">Latihan ISO • Aperture • Shutter Speed</p></div>
-  
-  <!-- Form Buat Akun Baru -->
-  <div id="newAccountForm">
-    <div class="avatarWrap loginAvatar"><img id="loginAvatar" class="avatar" alt="avatar"><label class="pencil" title="Pilih foto">✎<input id="loginPhoto" class="fileInput" type="file" accept="image/*"></label></div>
-    <label class="label">Nama</label><input id="loginName" maxlength="20" placeholder="Masukkan nama kamu">
-    <button class="btn" onclick="createPlayer()">BUAT AKUN & MULAI 🚀</button>
-    <button class="seeMore" style="width:100%;margin-top:10px" onclick="toggleLoginMode('existing')">Sudah punya akun / Masuk pakai ID ➜</button>
+  <div class="loginTitle">
+    <h1>📸 PHOTO QUEST</h1>
+    <p class="muted">Latihan ISO • Aperture • Shutter Speed</p>
   </div>
-
-  <!-- Form Masuk Pakai ID / Pilih Histori Akun -->
-  <div id="existingAccountForm" class="hidden">
-    <label class="label">Masukkan Player ID</label>
-    <input id="loginPlayerId" placeholder="Contoh: A1B2C3D4">
-    <button class="btn" onclick="loginWithId()">MASUK PAKAI ID 🔑</button>
-    
-    <div class="sectionTitle" style="font-size:18px;margin-top:20px">Atau Pilih Histori Akun:</div>
-    <div id="accountHistoryList"></div>
-    
-    <button class="seeMore" style="width:100%;margin-top:15px" onclick="toggleLoginMode('new')">← Buat Akun Baru</button>
+  <div style="text-align:center;margin:30px 0;">
+    <button class="btn" style="background:#fff;color:#111;display:flex;align-items:center;justify-content:center;gap:10px;" onclick="loginWithGoogle()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20">
+      MASUK DENGAN GOOGLE
+    </button>
   </div>
 </section>
 
@@ -83,6 +75,7 @@
   <div class="drawerPanel">
     <div class="drawerHead"><h2>MENU</h2><button class="drawerClose" onclick="closeMenu()">✕</button></div>
     <div class="themeRow">
+      <button class="btn dark" style="margin-top:14px;background:#ff4d4d;color:#fff;border:0" onclick="logoutPlayer()">🚪 LOGOUT</button>
       <div class="themeText"><b>Mode Tampilan</b><small id="themeLabel">Cerah</small></div>
       <button id="themeSwitch" class="themeSwitch" aria-label="Ganti tema" onclick="toggleTheme()"></button>
     </div>
@@ -98,6 +91,54 @@
 <div id="cropModal" class="modal hidden"><div class="card modalCard"><div class="top"><h2 id="cropTitle">Atur Foto</h2><button class="btn dark" style="width:auto;margin:0" onclick="cancelCrop()">✕</button></div><div class="cropBox"><div id="cropViewport" class="cropViewport"><img id="cropImg" class="cropImg" alt="crop preview"><div id="cropMask" class="cropMask"></div></div><div class="cropHint">Geser foto untuk mengatur posisi • Zoom untuk memperbesar/memperkecil</div><div class="cropControls"><span>−</span><input id="cropZoom" type="range" min="1" max="3" step="0.01" value="1"><span>+</span></div></div><div class="cropActions"><button class="btn dark" onclick="cancelCrop()">BATAL</button><button class="btn" onclick="applyCrop()">GUNAKAN FOTO</button></div></div></div>
 
 <script>
+  // Konfigurasi Firebase Photo Quest
+const firebaseConfig = {
+  apiKey: "AIzaSyA175iSAVGGyQciP4hrir3d2...", // Lengkapi apiKey dari screenshot kamu
+  authDomain: "photo-quest-6665c.firebaseapp.com",
+  projectId: "photo-quest-6665c",
+  storageBucket: "photo-quest-6665c.firebasestorage.app",
+  messagingSenderId: "518476109170",
+  appId: "1:518476109170:web:a6d503c76bb...", // Lengkapi appId dari screenshot kamu
+  measurementId: "G-4MGDWQCS8F"
+};
+
+// Inisialisasi
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+// Fungsi Login Google
+function loginWithGoogle() {
+  auth.signInWithPopup(googleProvider).then((result) => {
+    const googleUser = result.user;
+    user = {
+      id: googleUser.uid,
+      name: googleUser.displayName || 'Player',
+      avatar: googleUser.photoURL || avatarData('Player'),
+      banner: '',
+      games: 0,
+      best: 0,
+      totalScore: 0,
+      totalQuestions: 0,
+      history: [],
+      historyVisible: true
+    };
+    saveUser();
+    showHome();
+  }).catch((error) => {
+    alert("Gagal login: " + error.message);
+  });
+}
+
+// Fungsi Logout
+function logoutPlayer() {
+  auth.signOut().then(() => {
+    localStorage.removeItem('pqUserV4');
+    user = null;
+    closeMenu();
+    showOnly('login');
+  });
+}
 const QUESTIONS=[
 {d:'Easy',t:'Indoor Redup',s:'Ruangan agak redup. Orang duduk diam. Kamu ingin background blur dan foto tidak goyang.',g:'Terang + bokeh + aman dari goyangan.',iso:[800,1600],ap:['f/1.8','f/2.8'],ss:[60,125],why:'ISO 800–1600, f/1.8–2.8, dan 1/60–1/125 cocok untuk ruangan redup dengan subjek diam.'},
 {d:'Easy',t:'Portrait Siang',s:'Outdoor siang hari. Matahari cukup terang. Subjek berdiri diam dan background ingin blur.',g:'Tidak overexposure + background blur.',iso:[100],ap:['f/1.8','f/2.8','f/4'],ss:[500,1000],why:'ISO 100 menjaga exposure; aperture lebar memberi bokeh; shutter cepat membantu menahan cahaya siang.'},
@@ -241,33 +282,6 @@ function selectAccount(id){
     saveUser();
     showHome();
   }
-}
-
-// Masuk menggunakan input ID
-function loginWithId(){
-  const id = $('loginPlayerId').value.trim().toUpperCase();
-  if(!id) return alert('Masukkan ID dulu!');
-  let vault = {};
-  try{ vault = JSON.parse(localStorage.getItem('pqAccountVault') || '{}') }catch(e){}
-  if(vault[id]){
-    user = vault[id];
-    saveUser();
-    showHome();
-  }else{
-    alert('ID akun tidak ditemukan di histori perangkat ini!');
-  }
-}
-
-// Fungsi Logout
-function logoutPlayer(){
-  if(user){
-    saveToAccountVault(user); // Simpan status terakhir ke vault
-  }
-  localStorage.removeItem('pqUserV4'); // Hapus sesi aktif
-  user = null;
-  closeMenu();
-  showOnly('login');
-  toggleLoginMode('existing'); // Langsung buka halaman daftar akun
 }
   
 (function init(){if(!localStorage.getItem('pqTheme')){localStorage.setItem('pqTheme','dark');}applyTheme();try{if(localStorage.getItem('pqAccountResetV2')!=='done'){localStorage.removeItem('pqUserV4');localStorage.removeItem('pqLeaderboardV4');localStorage.setItem('pqAccountResetV2','done')}}catch(e){}user=readUser();$('loginAvatar').src=avatarData('Player');if(user){showHome()}else{showOnly('login')}})();
