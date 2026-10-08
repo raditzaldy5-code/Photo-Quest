@@ -226,30 +226,41 @@
       }
     });
 
-            function handleUserData(googleUser) {
-      // Ambil data user lama jika ada agar ID tidak berubah saat refresh
-      let savedUser = null;
-      try { savedUser = JSON.parse(localStorage.getItem('pqUserV4')); } catch(e){}
+                function handleUserData(googleUser) {
+      const userRef = firebase.database().ref('leaderboard/' + googleUser.uid);
 
-      // Gunakan ID yang sudah ada, atau buat ID 6 digit baru jika akun baru
-      let user6DigitId = (savedUser && savedUser.id) ? savedUser.id : Math.floor(100000 + Math.random() * 900000).toString();
+      // Cek apakah data user sudah ada di Firebase
+      userRef.once('value').then((snapshot) => {
+        const cloudData = snapshot.val();
 
-      user = {
-        id: user6DigitId, // ID 6 digit konsisten
-        uid: googleUser.uid, // UID bawaan Firebase
-        name: googleUser.displayName || 'Player',
-        avatar: googleUser.photoURL || avatarData(googleUser.displayName || 'Player'),
-        banner: (savedUser && savedUser.banner) ? savedUser.banner : '',
-        games: (savedUser && savedUser.games) ? savedUser.games : 0,
-        best: (savedUser && savedUser.best) ? savedUser.best : 0,
-        totalScore: (savedUser && savedUser.totalScore) ? savedUser.totalScore : 0,
-        totalQuestions: (savedUser && savedUser.totalQuestions) ? savedUser.totalQuestions : 0,
-        history: (savedUser && savedUser.history) ? savedUser.history : [],
-        historyVisible: (savedUser && savedUser.historyVisible !== undefined) ? savedUser.historyVisible : true
-      };
+        // Ambil data lokal jika ada sebagai cadangan
+        let savedUser = null;
+        try { savedUser = JSON.parse(localStorage.getItem('pqUserV4')); } catch(e){}
 
-      saveUser();
-      showHome();
+        let user6DigitId = (cloudData && cloudData.id) ? cloudData.id : 
+                           ((savedUser && savedUser.id) ? savedUser.id : Math.floor(100000 + Math.random() * 900000).toString());
+
+        user = {
+          id: user6DigitId,
+          uid: googleUser.uid,
+          name: googleUser.displayName || 'Player',
+          avatar: googleUser.photoURL || avatarData(googleUser.displayName || 'Player'),
+          banner: (cloudData && cloudData.banner) || (savedUser && savedUser.banner) || '',
+          games: (cloudData && cloudData.games) !== undefined ? cloudData.games : ((savedUser && savedUser.games) || 0),
+          best: (cloudData && cloudData.best) !== undefined ? cloudData.best : ((savedUser && savedUser.best) || 0),
+          totalScore: (cloudData && cloudData.score) !== undefined ? cloudData.score : ((savedUser && savedUser.totalScore) || 0),
+          totalQuestions: (cloudData && cloudData.totalQuestions) !== undefined ? cloudData.totalQuestions : ((savedUser && savedUser.totalQuestions) || 0),
+          history: (savedUser && savedUser.history) ? savedUser.history : [],
+          historyVisible: true,
+          isGuest: false
+        };
+
+        saveUser();
+        showHome();
+      }).catch((err) => {
+        console.error("Gagal sinkron data cloud, memakai data lokal:", err);
+        showHome();
+      });
     }
 
     // Logout
@@ -413,7 +424,6 @@ function closeMenu(){
 
   // Simpan akun ke dalam daftar seluruh akun (Vault)
 function saveToAccountVault(userData) {
-  // Hanya simpan ke Firebase jika BUKAN Guest
   if (!userData || userData.isGuest) return;
 
   try {
@@ -422,11 +432,14 @@ function saveToAccountVault(userData) {
       avatar: userData.avatar,
       score: userData.totalScore || 0,
       best: userData.best || 0,
+      games: userData.games || 0,
+      totalQuestions: userData.totalQuestions || 0,
       id: userData.id,
+      banner: userData.banner || '',
       updatedAt: Date.now()
     });
   } catch(e) {
-    console.error("Gagal simpan ke leaderboard:", e);
+    console.error("Gagal simpan ke vault:", e);
   }
 }
 
