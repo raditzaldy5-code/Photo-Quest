@@ -25,12 +25,16 @@
     <h1>📸 PHOTO QUEST</h1>
     <p class="muted">Latihan ISO • Aperture • Shutter Speed</p>
   </div>
-  <div style="text-align:center;margin:30px 0;">
-    <button class="btn" style="background:#fff;color:#111;display:flex;align-items:center;justify-content:center;gap:10px;" onclick="loginWithGoogle()">
-      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20">
-      MASUK DENGAN GOOGLE
-    </button>
-  </div>
+        <div style="text-align:center;margin:30px 0;display:flex;flex-direction:column;gap:12px;">
+        <button class="btn" onclick="loginWithGoogle()" style="background:#fff;color:#111;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20">
+          MASUK DENGAN GOOGLE
+        </button>
+        
+        <button class="btn dark" onclick="loginAsGuest()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;">
+          👤 MASUK SEBAGAI GUEST
+        </button>
+      </div>
 </section>
 
 <section id="home" class="hidden">
@@ -71,18 +75,17 @@
 <section id="leaderboardPage" class="hidden"><h1>🏆 LEADERBOARD</h1><p id="lbStatus" class="muted">Mode lokal sementara • Firebase belum dikonfigurasi</p><div id="leaderboardList"></div><button class="btn back" onclick="goHome()">← KEMBALI</button></section>
 </div></div>
 
-<div id="menuDrawer" class="menuDrawer hidden" onclick="if(event.target===this)closeMenu()">
-  <div class="drawerPanel">
-    <div class="drawerHead"><h2>MENU</h2><button class="drawerClose" onclick="closeMenu()">✕</button></div>
-    <div class="themeRow">
-            <div class="themeRow">
-        <div class="themeText"><b>Mode Tampilan</b><small>Gelap / Terang</small></div>
-        <button id="themeSwitch" class="themeSwitch" aria-label="Ganti Tema"></button>
+    <div id="menuDrawer" class="menuDrawer hidden" onclick="if(event.target===this)closeMenu()">
+      <div class="drawerPanel">
+        <div class="drawerHead"><h2>MENU</h2><button class="drawerClose" onclick="closeMenu()">✕</button></div>
+        <div class="themeRow">
+          <div class="themeText"><b>Mode Tampilan</b><small>Gelap / Terang</small></div>
+          <button id="themeSwitch" class="themeSwitch" aria-label="Ganti Tema"></button>
+        </div>
+        <button class="btn dark" style="margin-top:20px;background:#ff4d4d;color:#fff;border:0;width:100%;" onclick="logoutPlayer()">LOGOUT</button>
+        <div class="drawerCredit">Created by R</div>
       </div>
-    <button class="btn dark" style="margin-top:14px;background:#ff4d4d;color:#fff;border:0" onclick="logoutPlayer()">LOGOUT</button>
-    <div class="drawerCredit">Created by R</div>
-  </div>
-</div>
+    </div>
 
 <div id="profileModal" class="modal hidden"><div class="card modalCard"><div class="top"><h2>👤 PROFIL</h2><button class="btn dark" style="width:auto;margin:0" onclick="closeModal()">✕</button></div>
 <div style="margin:15px auto;max-width:440px"><label class="label">Banner / Latar Profil</label><div style="position:relative;border-radius:16px;overflow:hidden;background:#292929"><img id="profileBanner" class="profileBanner" style="aspect-ratio:3/1" alt="banner profil"><label class="btn dark" style="position:absolute;right:10px;top:10px;width:auto;margin:0;padding:9px 13px;font-size:14px;cursor:pointer">✎ GANTI BANNER<input id="profileBannerInput" class="fileInput" type="file" accept="image/*"></label></div><button class="btn dark" style="margin-top:8px" onclick="removeBanner()">HAPUS BANNER</button></div>
@@ -127,7 +130,26 @@
           }
         });
     }
-
+    // Fungsi Login Guest
+    function loginAsGuest() {
+      const guestNum = Math.floor(100000 + Math.random() * 900000).toString();
+      user = {
+        id: guestNum,
+        uid: 'guest_' + guestNum,
+        name: 'Guest_' + guestNum.substring(0, 4),
+        avatar: avatarData('Guest'),
+        banner: '',
+        games: 0,
+        best: 0,
+        totalScore: 0,
+        totalQuestions: 0,
+        history: [],
+        historyVisible: true,
+        isGuest: true
+      };
+      saveUser();
+      showHome();
+    }
     // Tangkap hasil jika beralih ke Redirect
     auth.getRedirectResult().then((result) => {
       if (result && result.user) {
