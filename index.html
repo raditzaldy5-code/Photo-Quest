@@ -321,7 +321,7 @@ function playAgain(){startGame()}
 function loadQuestion(){const q=current[qIndex];$('qNum').textContent=`Quest ${qIndex+1}/${current.length}`;$('gameMeta').textContent=`${settings.difficulty} • ${current.length} soal`;$('progress').style.width=(qIndex/current.length*100)+'%';$('qTitle').textContent=q.t;$('qScenario').textContent=q.s;$('qTarget').textContent=q.g;$('feedback').className='feedback hidden';$('answerBtn').classList.remove('hidden');$('nextBtn').classList.add('hidden');answered=false}
 function checkAnswer(){if(answered)return;answered=true;const q=current[qIndex],iso=+$('iso').value,ap=$('ap').value,ss=+$('ss').value;let pts=0;if(q.iso.includes(iso))pts+=3;if(q.ap.includes(ap))pts+=3;if(q.ss.includes(ss))pts+=4;score+=pts;if(pts===10)perfect++;const type=pts===10?'good':pts>0?'mid':'bad';const msg=pts===10?'🔥 BENAR / SEMPURNA!':pts>0?'🟡 SEBAGIAN BENAR':'❌ SALAH';const ideal=`ISO ${q.iso.join(' / ')} • ${q.ap.join(' / ')} • ${q.ss.map(x=>'1/'+x+'s').join(' / ')}`;$('feedback').className='feedback '+type;$('feedback').innerHTML=`<b>${msg} — ${pts}/10</b><br><br><b>Jawaban kamu:</b> ISO ${iso} • ${ap} • 1/${ss}s<div class="answer"><b>📖 Jawaban ideal:</b><br>${ideal}<br><br>${q.why}</div>`;$('answerBtn').classList.add('hidden');$('nextBtn').classList.remove('hidden')}
 function nextQuestion(){qIndex++;if(qIndex<current.length)loadQuestion();else finishGame()}
-function finishGame(){const total=current.length*10;const rec={id:Date.now(),difficulty:settings.difficulty,count:current.length,score:score,total:total,date:new Date().toISOString()};user.games=(user.games||0)+1;user.best=Math.max(user.best||0,score);user.totalScore=(user.totalScore||0)+score;user.totalQuestions=(user.totalQuestions||0)+current.length;user.history=readHistory();user.history.unshift(rec);user.history=user.history.slice(0,50);saveUser();$('finalScore').textContent=`Skor: ${score}/${total}`;$('finalRank').textContent=score>=90?'🏆 MASTER PHOTOGRAPHER':score>=75?'🔥 PHOTOGRAPHER':score>=60?'📸 ROOKIE PHOTOGRAPHER':'🗿 MASIH PEMANASAN';$('finalSummary').textContent=`Selesai ${current.length} quest • ${perfect}/${current.length} sempurna.`;showOnly('finish')}
+function finishGame(){const total=current.length*10;const rec={id:Date.now(),difficulty:settings.difficulty,count:current.length,score:score,total:total,date:formatDate(new Date())};user.games=(user.games||0)+1;user.totalScore=(user.totalScore||0)+score;user.totalQuestions=(user.totalQuestions||0)+current.length;if(score>(user.best||0))user.best=score;user.history=user.history||[];user.history.unshift(rec);saveUser();showStats();saveToAccountVault(user);showOnly('finish');}
 function renderHistory(){const area=$('historyArea');if(!user.historyVisible){area.innerHTML='';$('historyToggle').textContent='HISTORI: OFF';return}$('historyToggle').textContent='HISTORI: ON';const h=readHistory();if(!h.length){area.innerHTML='<div class="empty">Belum ada permainan.</div>';return}let expanded=!!user.historyExpanded;const shown=expanded?h.slice(0,50):h.slice(0,5);area.innerHTML=shown.map((x,idx)=>`<div class="historyItem"><div class="historyInfo"><b>${x.difficulty.toUpperCase()} • ${x.count} SOAL • ${x.score}/${x.total}</b><small>${formatDate(x.date)}</small></div><button class="btn retry" onclick="retryHistory(${idx})">COBA LAGI</button></div>`).join('');if(h.length>5)area.innerHTML+=`<button class="seeMore" onclick="toggleMore()">${expanded?'See less':'See more ('+(h.length-5)+')'}</button>`}
 function formatDate(s){const d=new Date(s);return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short'})+', '+d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}
 function retryHistory(index){const h=readHistory();const x=h[index];settings.difficulty=x.difficulty;settings.count=x.count;renderHome();startGame()}
@@ -329,7 +329,54 @@ function toggleMore(){user.historyExpanded=!user.historyExpanded;saveUser();rend
 function toggleHistory(){user.historyVisible=!user.historyVisible;saveUser();renderHistory()}
 function showStats(){$('stGames').textContent=user.games||0;$('stBest').textContent=user.best||0;$('stAvg').textContent=user.games?Math.round(user.totalScore/user.games):0;$('stQuestions').textContent=user.totalQuestions||0;showOnly('statsPage')}
 function localLeaderboard(){let all=[];try{all=JSON.parse(localStorage.getItem('pqLeaderboardV4')||'[]')}catch(e){}const idx=all.findIndex(x=>x.id===user.id);const entry={id:user.id,name:user.name,avatar:user.avatar,score:user.best||0};if(idx>=0)all[idx]=entry;else all.push(entry);all.sort((a,b)=>b.score-a.score);localStorage.setItem('pqLeaderboardV4',JSON.stringify(all));return all}
-function showLeaderboard(){const all=localLeaderboard();$('leaderboardList').innerHTML=all.length?all.slice(0,50).map((x,i)=>`<div class="leader"><div class="rankNo">#${i+1}</div><img src="${x.avatar||avatarData(x.name)}"><div class="grow"><b>${escapeHtml(x.name)}</b><div class="muted">ID: ${x.id}</div></div><b>${x.score}</b></div>`).join(''):'<div class="empty">Belum ada player.</div>';showOnly('leaderboardPage')}
+function showLeaderboard() {
+  showOnly('leaderboardPage');
+  const container = document.getElementById('leaderboardList') || document.querySelector('#leaderboardPage .list');
+  if(!container) return;
+
+  container.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Memuat leaderboard online...</div>';
+
+  firebase.database().ref('leaderboard')
+    .orderByChild('score')
+    .limitToLast(20)
+    .once('value')
+    .then((snapshot) => {
+      let players = [];
+      snapshot.forEach((child) => {
+        players.push(child.val());
+      });
+
+      players.sort((a, b) => b.score - a.score);
+
+      if (players.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">Belum ada data pemain Google.</div>';
+        return;
+      }
+
+      let html = '';
+      players.forEach((p, index) => {
+        html += `
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:12px; margin-bottom:8px; background:#292929; border-radius:12px; color:#fff;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="font-weight:bold; width:25px;">#${index + 1}</span>
+              <img src="${p.avatar}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+              <div>
+                <div style="font-weight:bold;">${p.name}</div>
+                <div style="font-size:12px; opacity:0.7;">ID: ${p.id}</div>
+              </div>
+            </div>
+            <div style="font-weight:bold; font-size:16px;">${p.score} pts</div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    })
+    .catch((err) => {
+      container.innerHTML = '<div style="text-align:center; padding:20px; color:#ff4d4d;">Gagal memuat data online.</div>';
+    });
+}
+      
 function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function goHome(){showHome()}
 function showProfile(){if(!user.id){user.id=makeId();saveUser()}updateImage($('profileAvatar'),user.avatar);$('profileBanner').src=user.banner||defaultBanner();$('profileName').value=user.name;$('profilePlayerId').textContent=user.id;$('profilePhoto').value='';$('profileBannerInput').value='';$('profileModal').classList.remove('hidden')}
@@ -365,12 +412,22 @@ function closeMenu(){
       function toggleTheme(){const isLight=document.body.classList.contains('light-theme');localStorage.setItem('pqTheme',isLight?'dark':'light');applyTheme()}
 
   // Simpan akun ke dalam daftar seluruh akun (Vault)
-function saveToAccountVault(userData){
-  try{
-    let vault = JSON.parse(localStorage.getItem('pqAccountVault') || '{}');
-    vault[userData.id] = userData;
-    localStorage.setItem('pqAccountVault', JSON.stringify(vault));
-  }catch(e){console.error(e)}
+function saveToAccountVault(userData) {
+  // Hanya simpan ke Firebase jika BUKAN Guest
+  if (!userData || userData.isGuest) return;
+
+  try {
+    firebase.database().ref('leaderboard/' + userData.uid).set({
+      name: userData.name,
+      avatar: userData.avatar,
+      score: userData.totalScore || 0,
+      best: userData.best || 0,
+      id: userData.id,
+      updatedAt: Date.now()
+    });
+  } catch(e) {
+    console.error("Gagal simpan ke leaderboard:", e);
+  }
 }
 
 // Beralih tampilan form login (Baru / Masuk pakai ID)
