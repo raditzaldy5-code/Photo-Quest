@@ -19,9 +19,26 @@
 <div class="wrap"><div class="card">
 <section id="login">
   <div class="loginTitle"><h1>📸 PHOTO QUEST</h1><p class="muted">Latihan ISO • Aperture • Shutter Speed</p></div>
-  <div class="avatarWrap loginAvatar"><img id="loginAvatar" class="avatar" alt="avatar"><label class="pencil" title="Pilih foto">✎<input id="loginPhoto" class="fileInput" type="file" accept="image/*"></label></div>
-  <label class="label">Nama</label><input id="loginName" maxlength="20" placeholder="Masukkan nama kamu">
-  <button class="btn" onclick="createPlayer()">MASUK & MULAI 🚀</button>
+  
+  <!-- Form Buat Akun Baru -->
+  <div id="newAccountForm">
+    <div class="avatarWrap loginAvatar"><img id="loginAvatar" class="avatar" alt="avatar"><label class="pencil" title="Pilih foto">✎<input id="loginPhoto" class="fileInput" type="file" accept="image/*"></label></div>
+    <label class="label">Nama</label><input id="loginName" maxlength="20" placeholder="Masukkan nama kamu">
+    <button class="btn" onclick="createPlayer()">BUAT AKUN & MULAI 🚀</button>
+    <button class="seeMore" style="width:100%;margin-top:10px" onclick="toggleLoginMode('existing')">Sudah punya akun / Masuk pakai ID ➜</button>
+  </div>
+
+  <!-- Form Masuk Pakai ID / Pilih Histori Akun -->
+  <div id="existingAccountForm" class="hidden">
+    <label class="label">Masukkan Player ID</label>
+    <input id="loginPlayerId" placeholder="Contoh: A1B2C3D4">
+    <button class="btn" onclick="loginWithId()">MASUK PAKAI ID 🔑</button>
+    
+    <div class="sectionTitle" style="font-size:18px;margin-top:20px">Atau Pilih Histori Akun:</div>
+    <div id="accountHistoryList"></div>
+    
+    <button class="seeMore" style="width:100%;margin-top:15px" onclick="toggleLoginMode('new')">← Buat Akun Baru</button>
+  </div>
 </section>
 
 <section id="home" class="hidden">
@@ -69,6 +86,7 @@
       <div class="themeText"><b>Mode Tampilan</b><small id="themeLabel">Cerah</small></div>
       <button id="themeSwitch" class="themeSwitch" aria-label="Ganti tema" onclick="toggleTheme()"></button>
     </div>
+    <button class="btn dark" style="margin-top:14px;background:#ff4d4d;color:#fff;border:0" onclick="logoutPlayer()">🚪 LOGOUT</button>
     <div class="drawerCredit">Created by R</div>
   </div>
 </div>
@@ -96,7 +114,17 @@ let user=null,settings={difficulty:'Easy',count:5},current=[],qIndex=0,score=0,p
 const $=id=>document.getElementById(id);
 function avatarData(name){return 'https://ui-avatars.com/api/?name='+encodeURIComponent(name)+'&background=303030&color=fff&size=256'}
 function readUser(){try{return JSON.parse(localStorage.getItem('pqUserV4')||'null')}catch(e){return null}}
-function saveUser(){try{localStorage.setItem('pqUserV4',JSON.stringify(user));return true}catch(e){console.error(e);alert('Data akun gagal disimpan. Coba hapus data situs Photo Quest lalu login lagi.');return false}}
+function saveUser(){
+  try{
+    localStorage.setItem('pqUserV4',JSON.stringify(user));
+    if(user && user.id) saveToAccountVault(user); // Otomatis simpan ke vault
+    return true;
+  }catch(e){
+    console.error(e);
+    alert('Data akun gagal disimpan.');
+    return false;
+  }
+}
 function readHistory(){return Array.isArray(user.history)?user.history:[]}
 function saveHistory(){user.history=readHistory();saveUser()}
 function updateImage(img,src){if(img)img.src=src||avatarData(user?.name||'Player')}
@@ -167,6 +195,81 @@ function openMenu(){applyTheme();$('menuDrawer').classList.remove('hidden')}
 function closeMenu(){$('menuDrawer').classList.add('hidden')}
 function toggleTheme(){const isLight=document.body.classList.contains('light-theme');localStorage.setItem('pqTheme',isLight?'dark':'light');applyTheme()}
 
+  // Simpan akun ke dalam daftar seluruh akun (Vault)
+function saveToAccountVault(userData){
+  try{
+    let vault = JSON.parse(localStorage.getItem('pqAccountVault') || '{}');
+    vault[userData.id] = userData;
+    localStorage.setItem('pqAccountVault', JSON.stringify(vault));
+  }catch(e){console.error(e)}
+}
+
+// Beralih tampilan form login (Baru / Masuk pakai ID)
+function toggleLoginMode(mode){
+  $('newAccountForm').classList.toggle('hidden', mode === 'existing');$('existingAccountForm').classList.toggle('hidden', mode === 'new');
+  if(mode === 'existing') renderAccountHistory();
+}
+
+// Render daftar histori akun yang pernah login
+function renderAccountHistory(){
+  const area = $('accountHistoryList');
+  let vault = {};
+  try{ vault = JSON.parse(localStorage.getItem('pqAccountVault') || '{}') }catch(e){}
+  const keys = Object.keys(vault);
+  if(!keys.length){
+    area.innerHTML = '<div class="empty">Belum ada histori akun tersimpan.</div>';
+    return;
+  }
+  area.innerHTML = keys.map(id => {
+    const acc = vault[id];
+    return `<div class="historyItem" style="cursor:pointer" onclick="selectAccount('${acc.id}')">
+      <div class="miniRow">
+        <img src="${acc.avatar || avatarData(acc.name)}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">
+        <div><b>${escapeHtml(acc.name)}</b><small>ID: ${acc.id}</small></div>
+      </div>
+      <button class="btn retry">MASUK</button>
+    </div>`;
+  }).join('');
+}
+
+// Pilih akun dari histori
+function selectAccount(id){
+  let vault = {};
+  try{ vault = JSON.parse(localStorage.getItem('pqAccountVault') || '{}') }catch(e){}
+  if(vault[id]){
+    user = vault[id];
+    saveUser();
+    showHome();
+  }
+}
+
+// Masuk menggunakan input ID
+function loginWithId(){
+  const id = $('loginPlayerId').value.trim().toUpperCase();
+  if(!id) return alert('Masukkan ID dulu!');
+  let vault = {};
+  try{ vault = JSON.parse(localStorage.getItem('pqAccountVault') || '{}') }catch(e){}
+  if(vault[id]){
+    user = vault[id];
+    saveUser();
+    showHome();
+  }else{
+    alert('ID akun tidak ditemukan di histori perangkat ini!');
+  }
+}
+
+// Fungsi Logout
+function logoutPlayer(){
+  if(user){
+    saveToAccountVault(user); // Simpan status terakhir ke vault
+  }
+  localStorage.removeItem('pqUserV4'); // Hapus sesi aktif
+  user = null;
+  closeMenu();
+  showOnly('login');
+  toggleLoginMode('existing'); // Langsung buka halaman daftar akun
+}
+  
 (function init(){if(!localStorage.getItem('pqTheme')){localStorage.setItem('pqTheme','dark');}applyTheme();try{if(localStorage.getItem('pqAccountResetV2')!=='done'){localStorage.removeItem('pqUserV4');localStorage.removeItem('pqLeaderboardV4');localStorage.setItem('pqAccountResetV2','done')}}catch(e){}user=readUser();$('loginAvatar').src=avatarData('Player');if(user){showHome()}else{showOnly('login')}})();
   
 </script>
