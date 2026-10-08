@@ -589,68 +589,184 @@ function selectAccount(id){
 }
 (function init(){if(!localStorage.getItem('pqTheme')){localStorage.setItem('pqTheme','dark');}applyTheme();try{if(localStorage.getItem('pqAccountResetV2')!=='done'){localStorage.removeItem('pqUserV4');localStorage.removeItem('pqLeaderboardV4');localStorage.setItem('pqAccountResetV2','done')}}catch(e){}user=readUser();$('loginAvatar').src=avatarData('Player');if(user){showHome()}else{showOnly('login')}})();
 
-      let cropper = null;
-let currentCropType = '';
-let croppedAvatarBase64 = null;
-let croppedBannerBase64 = null;
+// === LOGIKA EDIT PROFIL & CROP ===
+let cropType = ''; 
+let cropImgBase64 = '';
+let imgState = { scale: 1, x: 0, y: 0 };
+let isDragging = false, startX = 0, startY = 0;
 
-document.getElementById('inputAvatar').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (file) openCropModal(file, 'avatar');
-  this.value = '';
-});
+const profileModal = document.getElementById('profileModal');
+const cropModal = document.getElementById('cropModal');
+const cropImg = document.getElementById('cropImg');
+const cropViewport = document.getElementById('cropViewport');
+const cropMask = document.getElementById('cropMask');
+const cropZoom = document.getElementById('cropZoom');
 
-document.getElementById('inputBanner').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (file) openCropModal(file, 'banner');
-  this.value = '';
-});
+if (document.getElementById('profilePhoto')) {
+  document.getElementById('profilePhoto').addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+      initCrop(e.target.files[0], 'avatar');
+      this.value = '';
+    }
+  });
+}
 
-function openCropModal(file, type) {
-  currentCropType = type;
+if (document.getElementById('profileBannerInput')) {
+  document.getElementById('profileBannerInput').addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+      initCrop(e.target.files[0], 'banner');
+      this.value = '';
+    }
+  });
+}
+
+function initCrop(file, type) {
+  cropType = type;
+  if (document.getElementById('cropTitle')) {
+    document.getElementById('cropTitle').innerText = (type === 'avatar') ? 'Atur Foto Profil' : 'Atur Banner';
+  }
+  
+  if (cropViewport && cropMask) {
+    if (type === 'avatar') {
+      cropViewport.classList.add('circle');
+      cropMask.className = 'cropMask circle';
+    } else {
+      cropViewport.classList.remove('circle');
+      cropMask.className = 'cropMask banner';
+    }
+  }
+
   const reader = new FileReader();
   reader.onload = function(evt) {
-    const cropImg = document.getElementById('cropImage');
-    cropImg.src = evt.target.result;
-    document.getElementById('cropTitle').innerText = (type === 'avatar') ? 'Potong Foto Profil' : 'Potong Banner';
-    document.getElementById('cropModal').classList.remove('hidden');
-
-    if (cropper) cropper.destroy();
-
-    cropper = new Cropper(cropImg, {
-      aspectRatio: (type === 'avatar') ? 1 : 3 / 1,
-      viewMode: 1,
-      autoCropArea: 1
-    });
+    cropImgBase64 = evt.target.result;
+    if (cropImg) cropImg.src = cropImgBase64;
+    imgState = { scale: 1, x: 0, y: 0 };
+    if (cropZoom) cropZoom.value = 1;
+    updateImgTransform();
+    if (cropModal) cropModal.classList.remove('hidden');
   };
   reader.readAsDataURL(file);
 }
 
-function closeCropModal() {
-  document.getElementById('cropModal').classList.add('hidden');
-  if (cropper) {
-    cropper.destroy();
-    cropper = null;
+function updateImgTransform() {
+  if (cropImg) {
+    cropImg.style.transform = `translate(-50%, -50%) translate(${imgState.x}px, ${imgState.y}px) scale(${imgState.scale})`;
   }
 }
 
-document.getElementById('btnApplyCrop').addEventListener('click', function() {
-  if (!cropper) return;
-  const canvas = cropper.getCroppedCanvas({
-    width: currentCropType === 'avatar' ? 300 : 800,
-    height: currentCropType === 'avatar' ? 300 : 266
+if (cropZoom) {
+  cropZoom.addEventListener('input', function() {
+    imgState.scale = parseFloat(this.value);
+    updateImgTransform();
   });
-  const base64Image = canvas.toDataURL('image/jpeg', 0.8);
+}
 
-  if (currentCropType === 'avatar') {
-    croppedAvatarBase64 = base64Image;
-    const profileAvatarImg = document.getElementById('profileAvatar');
-    if (profileAvatarImg) profileAvatarImg.src = base64Image;
-  } else if (currentCropType === 'banner') {
-    croppedBannerBase64 = base64Image;
+if (cropViewport) {
+  cropViewport.addEventListener('mousedown', startDrag);
+  cropViewport.addEventListener('touchstart', startDrag, { passive: false });
+}
+
+window.addEventListener('mousemove', moveDrag);
+window.addEventListener('touchmove', moveDrag, { passive: false });
+window.addEventListener('mouseup', endDrag);
+window.addEventListener('touchend', endDrag);
+
+function startDrag(e) {
+  isDragging = true;
+  if (cropImg) cropImg.classList.add('dragging');
+  const p = getPoint(e);
+  startX = p.x - imgState.x;
+  startY = p.y - imgState.y;
+}
+
+function moveDrag(e) {
+  if (!isDragging) return;
+  e.preventDefault();
+  const p = getPoint(e);
+  imgState.x = p.x - startX;
+  imgState.y = p.y - startY;
+  updateImgTransform();
+}
+
+function endDrag() {
+  isDragging = false;
+  if (cropImg) cropImg.classList.remove('dragging');
+}
+
+function getPoint(e) {
+  if (e.touches && e.touches.length > 0) {
+    return { x: e.touches[0].clientX, y: e.touches[0].clientY };
   }
-  closeCropModal();
-});
+  return { x: e.clientX, y: e.clientY };
+}
+
+function cancelCrop() {
+  if (cropModal) cropModal.classList.add('hidden');
+}
+
+function applyCrop() {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const width = (cropType === 'avatar') ? 300 : 900;
+  const height = (cropType === 'avatar') ? 300 : 300;
+  
+  canvas.width = width;
+  canvas.height = height;
+
+  const image = new Image();
+  image.src = cropImgBase64;
+  image.onload = function() {
+    ctx.drawImage(image, 0, 0, width, height);
+    const resultBase64 = canvas.toDataURL('image/jpeg', 0.85);
+
+    if (cropType === 'avatar') {
+      const avatarEl = document.getElementById('profileAvatar');
+      if (avatarEl) avatarEl.src = resultBase64;
+      if (typeof user !== 'undefined' && user) user.avatar = resultBase64;
+    } else {
+      const bannerEl = document.getElementById('profileBanner');
+      if (bannerEl) bannerEl.src = resultBase64;
+      if (typeof user !== 'undefined' && user) user.banner = resultBase64;
+    }
+    cancelCrop();
+  };
+}
+
+function showProfile() {
+  if (typeof user === 'undefined' || !user) return;
+  const nameEl = document.getElementById('profileName');
+  const idEl = document.getElementById('profilePlayerId');
+  if (nameEl) nameEl.value = user.name || '';
+  if (idEl) idEl.innerText = user.id || '-';
+  
+  const avatarEl = document.getElementById('profileAvatar');
+  const bannerEl = document.getElementById('profileBanner');
+  if (avatarEl) avatarEl.src = user.avatar || '';
+  if (bannerEl) bannerEl.src = user.banner || '';
+  
+  if (profileModal) profileModal.classList.remove('hidden');
+}
+
+function closeModal() {
+  if (profileModal) profileModal.classList.add('hidden');
+}
+
+function removeBanner() {
+  if (typeof user !== 'undefined' && user) user.banner = '';
+  const bannerEl = document.getElementById('profileBanner');
+  if (bannerEl) bannerEl.src = '';
+}
+
+function saveProfile() {
+  if (typeof user === 'undefined' || !user) return;
+  const nameEl = document.getElementById('profileName');
+  if (nameEl && nameEl.value.trim()) {
+    user.name = nameEl.value.trim();
+  }
+  if (typeof saveUser === 'function') saveUser();
+  if (typeof renderHome === 'function') renderHome();
+  closeModal();
+    }
       
 </script>
 </body></html>
