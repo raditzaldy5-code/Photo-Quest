@@ -213,23 +213,28 @@
       }
     });
 
-        function handleUserData(googleUser) {
-      // Buat ID angka 6 digit jika belum ada
-      const shortId = Math.floor(100000 + Math.random() * 900000).toString();
+            function handleUserData(googleUser) {
+      // Ambil data user lama jika ada agar ID tidak berubah saat refresh
+      let savedUser = null;
+      try { savedUser = JSON.parse(localStorage.getItem('pqUserV4')); } catch(e){}
+
+      // Gunakan ID yang sudah ada, atau buat ID 6 digit baru jika akun baru
+      let user6DigitId = (savedUser && savedUser.id) ? savedUser.id : Math.floor(100000 + Math.random() * 900000).toString();
 
       user = {
-        id: shortId, // <--- Sekarang ID berupa angka 6 digit (contoh: 582914)
-        uid: googleUser.uid, // Tetap simpan UID asli Firebase di latar belakang
+        id: user6DigitId, // ID 6 digit konsisten
+        uid: googleUser.uid, // UID bawaan Firebase
         name: googleUser.displayName || 'Player',
         avatar: googleUser.photoURL || avatarData(googleUser.displayName || 'Player'),
-        banner: '',
-        games: 0,
-        best: 0,
-        totalScore: 0,
-        totalQuestions: 0,
-        history: [],
-        historyVisible: true
+        banner: (savedUser && savedUser.banner) ? savedUser.banner : '',
+        games: (savedUser && savedUser.games) ? savedUser.games : 0,
+        best: (savedUser && savedUser.best) ? savedUser.best : 0,
+        totalScore: (savedUser && savedUser.totalScore) ? savedUser.totalScore : 0,
+        totalQuestions: (savedUser && savedUser.totalQuestions) ? savedUser.totalQuestions : 0,
+        history: (savedUser && savedUser.history) ? savedUser.history : [],
+        historyVisible: (savedUser && savedUser.historyVisible !== undefined) ? savedUser.historyVisible : true
       };
+
       saveUser();
       showHome();
     }
