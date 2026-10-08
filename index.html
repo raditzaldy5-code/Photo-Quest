@@ -59,24 +59,18 @@
 </head>
 <body>
 <div class="wrap"><div class="card">
-<section id="login">
-      <!-- Layar Loading Pembuka -->
-    <section id="authLoading" style="text-align: center; padding: 60px 20px;">
+    <!-- Layar Loading Pembuka -->
+    <section id="authLoading" class="hidden" style="text-align: center; padding: 60px 20px;">
       <div style="border: 4px solid #333; border-top: 4px solid #fff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px auto;"></div>
       <p style="color: #aaa; font-size: 14px;">Memeriksa akun...</p>
     </section>
 
-    <style>
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    </style>
-
-  <div class="loginTitle">
-    <h1>📸 PHOTO QUEST</h1>
-    <p class="muted">Latihan ISO • Aperture • Shutter Speed</p>
-  </div>
+    <!-- Layar Login -->
+    <section id="login">
+      <div class="loginTitle">
+        <h1>📸 PHOTO QUEST</h1>
+        <p class="muted">Latihan ISO • Aperture • Shutter Speed</p>
+      </div>
         <div style="text-align:center;margin:30px 0;display:flex;flex-direction:column;gap:12px;">
         <button class="btn" onclick="loginWithGoogle()" style="background:#fff;color:#111;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;">
           <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20">
@@ -239,7 +233,7 @@
       showOnly('login');
     }
 
-        // Tampilkan layar loading saat pertama kali dimuat/direfresh
+            // Tampilkan loading saat pemeriksaan awal
     showOnly('authLoading');
 
     // Sesi Login Persisten
@@ -365,9 +359,16 @@ function updateImage(img,src){if(img)img.src=src||avatarData(user?.name||'Player
 function createPlayer(){const n=$('loginName').value.trim();if(!n)return alert('Isi nama dulu 😭');user={id:makeId(),name:n,avatar:avatarData(n),banner:'',games:0,best:0,totalScore:0,totalQuestions:0,history:[],historyVisible:true};const f=$('loginPhoto').files[0];if(f){const r=new FileReader();r.onload=()=>{user.avatar=r.result;if(saveUser())showHome()};r.onerror=()=>alert('Foto profil gagal dibaca. Coba pilih foto lain.');r.readAsDataURL(f)}else{if(saveUser())showHome()}}
 function makeId(){return Math.random().toString(36).slice(2,8).toUpperCase()+Date.now().toString(36).slice(-4).toUpperCase()}
 function showOnly(id) {
-  ['authLoading', 'login', 'home', 'game', 'finish', 'statsPage', 'leaderboardPage'].forEach(x => {
+  const pages = ['authLoading', 'login', 'home', 'game', 'finish', 'statsPage', 'leaderboardPage'];
+  pages.forEach(x => {
     const el = document.getElementById(x);
-    if (el) el.classList.toggle('hidden', x !== id);
+    if (el) {
+      if (x === id) {
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    }
   });
 }
 function showHome(){showOnly('home');renderHome()}
