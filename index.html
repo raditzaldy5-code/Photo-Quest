@@ -92,15 +92,27 @@
 
 <script>
   // Konfigurasi Firebase Photo Quest
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyA175iSAVGGyQciP4hrir3d2...", // Lengkapi apiKey dari screenshot kamu
+  apiKey: "AIzaSyA175iSAVGGyQciP4hrir3d235elJz8nPQ",
   authDomain: "photo-quest-6665c.firebaseapp.com",
   projectId: "photo-quest-6665c",
   storageBucket: "photo-quest-6665c.firebasestorage.app",
   messagingSenderId: "518476109170",
-  appId: "1:518476109170:web:a6d503c76bb...", // Lengkapi appId dari screenshot kamu
-  measurementId: "G-4MGDWQCS8F"
+  appId: "1:518476109170:web:708d534d40a7c72b5f79eb",
+  measurementId: "G-9S57PMKR6P"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
 // Inisialisasi
 firebase.initializeApp(firebaseConfig);
