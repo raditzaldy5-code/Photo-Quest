@@ -90,16 +90,20 @@
 
 <div id="menuDrawer" class="menuDrawer hidden" onclick="if(event.target===this)closeMenu()">
   <div class="drawerPanel">
-    <div class="drawerHead">
-      <h2>MENU</h2>
-      <button class="drawerClose" onclick="closeMenu()">✕</button>
+    <div>
+      <div class="drawerHead">
+        <h2>MENU</h2>
+        <button class="drawerClose" onclick="closeMenu()">✕</button>
+      </div>
+      <div class="themeRow">
+        <div class="themeText"><b>Mode Tampilan</b><br><small>Gelap / Terang</small></div>
+        <button id="themeSwitch" class="themeSwitch" aria-label="Ganti Tema" onclick="toggleTheme()"></button>
+      </div>
     </div>
-    <div class="themeRow">
-      <div class="themeText"><b>Mode Tampilan</b><br><small>Gelap / Terang</small></div>
-      <button id="themeSwitch" class="themeSwitch" aria-label="Ganti Tema" onclick="toggleTheme()"></button>
+    <div>
+      <button class="btn dark" style="background:#ff4d4d;color:#fff;border:0;width:100%;padding:12px;border-radius:10px;font-weight:bold;cursor:pointer;" onclick="logoutPlayer()">Keluar / Ganti Akun</button>
+      <div class="drawerCredit" style="margin-top:15px;text-align:center;font-size:12px;color:#888;">Created by R</div>
     </div>
-    <button class="btn dark" style="margin-top:20px;background:#ff4d4d;color:#fff;border:0;width:100%" onclick="logoutPlayer()">Keluar / Ganti Akun</button>
-    <div class="drawerCredit">Created by 8</div>
   </div>
 </div>
 
